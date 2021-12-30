@@ -52,7 +52,7 @@ pcell_sex_age = incheon_pcell_sex_age[(incheon_pcell_sex_age['X_COORD']>min_X)&(
 pcell_sex_age = pcell_sex_age.iloc[:,:46]
 
 
-
+# 좌표계 변경(5179 -> 4326)
 inProj = Proj('+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs')
 outProj = Proj(init='epsg:4326')
 transformer = Transformer.from_proj(inProj,outProj)
