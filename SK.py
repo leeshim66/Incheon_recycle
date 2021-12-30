@@ -143,5 +143,5 @@ for i in range(11):
        folium.Circle(admin_center[i], radius=25, color='blue').add_to(m)
 m
 
-donggu.plot()
-print(donggu.head())
+
+
