@@ -14,9 +14,7 @@ from scipy.interpolate import griddata
 import scipy as sp
 import scipy.ndimage
 from plotnine import *
-from tqdm import tqdm
 import sys
-import pyarrow.csv as pacsv
 import time
 import warnings
 
@@ -86,7 +84,7 @@ pcell_sex_age['geometry'] = pcell_sex_age.apply(lambda row : Point([row['X_COORD
 pcell_sex_age = gpd.GeoDataFrame(pcell_sex_age, geometry='geometry')
 
 
-
+# 데이터 구조 변경
 melt_sex_age_donggu = pd.melt(pcell_sex_age_donggu, id_vars=['STD_YMD','HCODE','X_COORD','Y_COORD','longitude','latitude'], var_name='age')
 melt_sex_age_donggu.sort_values(['STD_YMD','HCODE','X_COORD','Y_COORD'], inplace=True)
 
