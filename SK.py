@@ -15,7 +15,6 @@ import scipy as sp
 import scipy.ndimage
 from plotnine import *
 import sys
-import time
 import warnings
 
 # sys.setrecursionlimit(10**6)
