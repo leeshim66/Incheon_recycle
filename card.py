@@ -24,7 +24,7 @@ dic = {'2814051000':'만석동','2814052500':'화수1·화평동','2814053000':'
 
 
 
-# data load
+### data load
 shinhan_19 = pd.DataFrame()
 
 for i in range(1,13):
@@ -39,4 +39,42 @@ shinhan_19.reset_index(drop=True, inplace=True)
 
 
 
+### 셀별 ID 부여
+all_dong = ['도원동','동인천동','북성동','송월동','신포동','신흥동','율목동','도화동','숭의1.3동','숭의2동','숭의4동','도화1동','용현2동','용현3동','가좌1동','가좌2동','가좌3동','가좌4동','석남2동','도화2.3동']
+korea = gpd.read_file('data/메타데이터/행정동데이터/HDONGP.shp', encoding='euc-kr')
+donggu = korea[(korea['DO_NAME']=='인천광역시')&((korea['GU_NAME']=='동구')|(korea['HDONG_NAME'].isin(all_dong)))].reset_index(drop=True)
+donggu.crs = '+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs'
+donggu['HCODE'] = donggu['HCODE'].astype(np.int64)
+
+donggu_geojson = donggu.to_crs(epsg=4326).to_json()
+
+sk_50m = gpd.read_file('data/메타데이터/sk_50_격자/sk_m50_grs80_utmk.shp', encoding='euc-kr')
+sk_50m['HCODE'] = 0
+
+# 목표 셀의 고유번호 리스트 추출
+idx = []
+for i in range(290000,len(sk_50m)):
+       for j in range(len(donggu)):
+              if (sk_50m['geometry'][i].intersects(donggu['geometry'][j])):
+                     idx.append(i)
+                     sk_50m['HCODE'][i] = donggu['HCODE'][j]
+                     break
+
+donggu_grid = sk_50m.iloc[idx,:].reset_index(drop=True)
+
+center_point = donggu_grid.centroid
+X_center = []
+Y_center = []
+
+for i in range(len(center_point)):
+       coord = list(center_point[i].coords)
+       X_center.append(coord[0][0])
+       Y_center.append(coord[0][1])
+
+donggu_grid['X_COORD'] = X_center
+donggu_grid['Y_COORD'] = Y_center
+
+# 신한카드 데이터에서 목표 셀만 추출
+shinhan = gpd.GeoDataFrame(pd.merge(shinhan_19,donggu_grid,how='inner', on='FID'))
+shinhan.drop(['월별','geometry','HCODE','X_COORD','Y_COORD'], axis=1, inplace=True)
 
