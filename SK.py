@@ -17,7 +17,7 @@ from plotnine import *
 import sys
 import warnings
 
-# sys.setrecursionlimit(10**6)
+sys.setrecursionlimit(10**6)
 warnings.filterwarnings('ignore')
 
 plt.rcParams['font.family'] = 'NanumGothic'
@@ -143,15 +143,19 @@ m
 
 
 
-# card 데이터와 합치기 위해 SK데이터에 FID를 부여하는 테이블 생성
+# card 데이터와 합치기 위해 SK인구데이터에 FID를 부여하는 테이블 생성
 fid_table = pcell_sex_age.groupby(['X_COORD','Y_COORD']).count().reset_index()[['X_COORD','Y_COORD']]
 fid_table['geometry'] = fid_table.apply(lambda row : Point([row['X_COORD'], row['Y_COORD']]), axis=1)
 fid_table = gpd.GeoDataFrame(fid_table, geometry='geometry')
 fid_table['FID'] = 0
 
-donggu_grid = pd.read_csv('data/final/donggu_grid.csv') # card.py에서 만들어놓은 목표셀 리스트
+donggu_grid = pd.read_csv('data/final/donggu_grid.csv') # card.py에서 만든 목표셀 리스트
 for i in range(len(fid_table)):
        for j in range(len(donggu_grid)):
               if fid_table.geometry[i].within(donggu_grid.geometry[j]):
                      fid_table.loc[i,'FID'] = donggu_grid.loc[j,'FID']
                      break
+fid_table = fid_table[fid_table['FID']!=0].drop(['geometry','HCODE'], axis=1)
+
+# Sk인구데이터에 FID 부여
+pcell_sex_age = pd.merge(pcell_sex_age, fid_table, how='inner', on=['X_COORD','Y_COORD'])
