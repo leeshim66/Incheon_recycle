@@ -27,11 +27,12 @@ plt.rcParams['figure.figsize'] = (16,12)
 dic = {'2814051000':'만석동','2814052500':'화수1·화평동','2814053000':'화수2동','2814055500':'송현1·2동',
        '2814057000':'송현3동','2814058000':'송림1동','2814059000':'송림2동','2814060500':'송림3·5동',
        '2814061000':'송림4동','2814063000':'송림6동','2814064000':'금창동'}
-# pd.options.display.float_format = '{:.10f}'.format
 
+# 데이터 로드
 incheon_pcell_sex_age = pd.read_csv('D:/인천재활용/data/SK생활인구데이터셋/2019/01/incheon_service_pcell_sex_age_pop_201901.csv', delimiter='|')
 incheon_pcell_sex_age['X_COORD'] = round(incheon_pcell_sex_age['X_COORD'],6)
 incheon_pcell_sex_age['Y_COORD'] = round(incheon_pcell_sex_age['Y_COORD'],6)
+
 # 인천시 동구 법정동코드 : 28140
 pcell_sex_age_donggu = incheon_pcell_sex_age[(2814000000<incheon_pcell_sex_age['HCODE']) & (incheon_pcell_sex_age['HCODE']<2815000000)].reset_index(drop=True)
 
@@ -127,7 +128,7 @@ donggu_geojson = donggu.to_crs(epsg=4326).to_json()
 
 
 
-
+# folium 지도에 현재 운영거점 시각화
 center = [37.48323,126.63000]
 admin_center = [[37.48323,126.62550],[37.48154,126.62990],[37.48434,126.63017],[37.47844,126.63335],
                 [37.48245,126.64264],[37.47623,126.64026],[37.47578,126.64270],[37.47473,126.64883],
@@ -142,3 +143,15 @@ m
 
 
 
+# card 데이터와 합치기 위해 SK데이터에 FID를 부여하는 테이블 생성
+fid_table = pcell_sex_age.groupby(['X_COORD','Y_COORD']).count().reset_index()[['X_COORD','Y_COORD']]
+fid_table['geometry'] = fid_table.apply(lambda row : Point([row['X_COORD'], row['Y_COORD']]), axis=1)
+fid_table = gpd.GeoDataFrame(fid_table, geometry='geometry')
+fid_table['FID'] = 0
+
+donggu_grid = pd.read_csv('data/final/donggu_grid.csv') # card.py에서 만들어놓은 목표셀 리스트
+for i in range(len(fid_table)):
+       for j in range(len(donggu_grid)):
+              if fid_table.geometry[i].within(donggu_grid.geometry[j]):
+                     fid_table.loc[i,'FID'] = donggu_grid.loc[j,'FID']
+                     break
