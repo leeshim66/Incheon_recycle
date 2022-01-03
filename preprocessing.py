@@ -29,3 +29,8 @@ dic = {'2814051000':'만석동','2814052500':'화수1·화평동','2814053000':'
        '2814061000':'송림4동','2814063000':'송림6동','2814064000':'금창동'}
 
 
+sk = pd.read_csv('data/sk.csv')
+card = pd.read_csv('data/신한카드.csv')
+
+final_data = pd.merge(sk, card, how='left', on=['FID','STD_YMD'])
+final_data = final_data.fillna(0)
