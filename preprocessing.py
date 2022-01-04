@@ -34,3 +34,93 @@ card = pd.read_csv('data/신한카드.csv')
 
 final_data = pd.merge(sk, card, how='left', on=['FID','STD_YMD'])
 final_data = final_data.fillna(0)
+
+
+### 적분을 통한 각 행정복지센터 기준 거리별 인구
+# 적분 함수
+def integrity(case, lat, lon, xmin_vec, xmax_vec, ymin_vec, ymax_vec, r, k):
+       N = len(case)
+       perc = [0]*N
+       for j in range(N):
+              pre = case[j]
+              xmin = xmin_vec[j]
+              xmax = xmax_vec[j]
+              ymin = ymin_vec[j]
+              ymax = ymax_vec[j]
+
+              if pre=='1':
+                     rg = np.arange(lon - np.sqrt(r**2-(ymax-lat)**2), xmax, k)
+                     def f(x):
+                            return ymax - lat + np.sqrt(r**2-(x-lon)**2)
+              elif pre=='2':
+                     rg = np.arange(xmin, lon + np.sqrt(r**2-(ymax-lat)**2), k)
+                     def f(x):
+                            return ymax - lat + np.sqrt(r**2-(x-lon)**2)
+              elif pre=='3':
+                     rg = np.arange(xmin, lon + np.sqrt(r**2-(ymin-lat)**2), k)
+                     def f(x):
+                            return lat + np.sqrt(r**2-(x-lon)**2) - ymin
+              elif pre=='4':
+                     rg = np.arange(lon - np.sqrt(r**2-(ymin-lat)**2), xmax, k)
+                     def f(x):
+                            return lat + np.sqrt(r**2-(x-lon)**2) - ymin
+              elif pre=='12':
+                     rg = np.arange(xmin, xmax, k)
+                     def f(x):
+                            return ymax - lat + np.sqrt(r**2-(x-lon)**2)
+              elif pre=='23':
+                     rg = np.arange(ymin, ymax, k)
+                     def f(x):
+                            return ymax - lon + np.sqrt(r**2-(x-lat)**2)
+              elif pre=='34':
+                     rg = np.arange(xmin, xmax, k)
+                     def f(x):
+                            return lat + np.sqrt(r**2-(x-lon)**2) - ymin
+              elif pre=='14':
+                     rg = np.arange(ymin, ymax, k)
+                     def f(x):
+                            return xmax - lon + np.sqrt(r**2-(x-lat)**2)
+              elif pre=='123':
+                     rg = np.arange(lon + np.sqrt(r**2-(ymin-lat)**2), xmax, k)
+                     sq = (lon + np.sqrt(r**2-(ymin-lat)**2) - xmin)*50
+                     def f(x):
+                            return ymax - lat + np.sqrt(r**2-(x-lon)**2)
+              elif pre=='124':
+                     rg = np.arange(xmin, lon + np.sqrt(r**2-(ymin-lat)**2), k)
+                     sq = (xmax - lon + np.sqrt(r**2-(ymin-lat)**2))*50
+                     def f(x):
+                            return ymax - lat + np.sqrt(r**2-(x-lon)**2)
+              elif pre=='134':
+                     rg = np.arange(xmin, lon + np.sqrt(r**2-(ymax-lat)**2), k)
+                     sq = (xmax - lon + np.sqrt(r**2-(ymax-lat)**2))*50
+                     def f(x):
+                            return lat + np.sqrt(r**2-(x-lon)**2) - ymin
+              elif pre=='234':
+                     rg = np.arange(lon + np.sqrt(r**2-(ymax-lat)**2), xmax, k)
+                     sq = (lon + np.sqrt(r**2-(ymax-lat)**2) - xmin)*50
+                     def f(x):
+                            return lat + np.sqrt(r**2-(x-lon)**2) - ymin
+
+              int_pre = int(pre)
+              if int_pre==0:
+                     perc[j] = 0
+              elif int_pre<100 :
+                     summ = 0
+                     for i in range(k):
+                            if i==0 or i==k-1:
+                                   summ = summ + (rg[-1]-rg[0]) / (n-1)/2*f(rg[i])
+                            else :
+                                   summ = summ + (rg[-1]-rg[0]) / (n-1)*f(rg[i])
+                     perc[j] = summ / 50**2
+              elif int_pre<1000 :
+                     summ = 0
+                     for i in range(k):
+                            if i==0 or i==k-1:
+                                   summ = summ + (rg[-1]-rg[0]) / (n-1)/2*f(rg[i])
+                            else :
+                                   summ = summ + (rg[-1]-rg[0])/(n-1)*f(rg[i])
+                     perc[j] = (summ+sq) / 50**2
+              else :
+                     perc[j] = 1
+
+       return perc
