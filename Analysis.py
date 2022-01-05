@@ -107,7 +107,7 @@ XGB1.fit(X1,y1)
 XGB2.fit(X2,y2)
 XGB3.fit(X3,y3)
 
-predict_df = pd.read_csv('data/final/pred_df_211213.csv')
+predict_df = pd.read_csv('data/final/pred_df.csv')
 
 X_pred1 = predict_df[feature1]
 X_pred2 = predict_df[feature2]
